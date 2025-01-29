@@ -73,11 +73,31 @@ class Scanner {
         case '\n':
             line++;
             break;
+        case '"': string(); break;
 
         default:
             Veld.error(line, "Unexpected character.");
             break;
         }
+    }
+
+    private void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') line++;
+            advance();
+        }
+
+        if (isAtEnd()) {
+            Veld.error(line, "Unterminated string.");
+            return;
+        }
+
+        // The closing ".
+        advance();
+
+        // Trim the surrounding quotes.
+        String value = source.substring(start + 1, current - 1);
+        addToken(TokenType.STRING, value);
     }
 
     /**
