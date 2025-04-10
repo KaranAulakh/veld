@@ -1,4 +1,4 @@
-package com.craftinginterpreters.veld;
+package com.veld;
 
 enum TokenType {
     // Single-character tokens.

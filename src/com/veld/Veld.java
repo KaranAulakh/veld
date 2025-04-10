@@ -1,4 +1,4 @@
-package com.craftinginterpreters.veld;
+package com.veld;
 
 import java.io.BufferedReader;
 import java.io.IOException;

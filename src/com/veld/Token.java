@@ -1,4 +1,4 @@
-package com.craftinginterpreters.veld;
+package com.veld;
 
 public class Token {
     final TokenType type;
