@@ -1,11 +1,28 @@
 package com.craftinginterpreters.veld;
 
+import static com.craftinginterpreters.veld.TokenType.AND;
+import static com.craftinginterpreters.veld.TokenType.CLASS;
+import static com.craftinginterpreters.veld.TokenType.ELSE;
+import static com.craftinginterpreters.veld.TokenType.FALSE;
+import static com.craftinginterpreters.veld.TokenType.FOR;
+import static com.craftinginterpreters.veld.TokenType.FUN;
+import static com.craftinginterpreters.veld.TokenType.IDENTIFIER;
+import static com.craftinginterpreters.veld.TokenType.IF;
+import static com.craftinginterpreters.veld.TokenType.NULL;
+import static com.craftinginterpreters.veld.TokenType.NUMBER;
+import static com.craftinginterpreters.veld.TokenType.OR;
+import static com.craftinginterpreters.veld.TokenType.PRINT;
+import static com.craftinginterpreters.veld.TokenType.RETURN;
+import static com.craftinginterpreters.veld.TokenType.SUPER;
+import static com.craftinginterpreters.veld.TokenType.THIS;
+import static com.craftinginterpreters.veld.TokenType.TRUE;
+import static com.craftinginterpreters.veld.TokenType.VAR;
+import static com.craftinginterpreters.veld.TokenType.WHILE;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.craftinginterpreters.veld.TokenType.*;
 
 class Scanner {
     private final String source;
@@ -13,6 +30,28 @@ class Scanner {
     private int start = 0;
     private int current = 0;
     private int line = 1;
+
+    private static final Map<String, TokenType> keywords;
+
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and",    AND);
+        keywords.put("class",  CLASS);
+        keywords.put("else",   ELSE);
+        keywords.put("false",  FALSE);
+        keywords.put("for",    FOR);
+        keywords.put("fun",    FUN);
+        keywords.put("if",     IF);
+        keywords.put("null",   NULL);
+        keywords.put("or",     OR);
+        keywords.put("print",  PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super",  SUPER);
+        keywords.put("this",   THIS);
+        keywords.put("true",   TRUE);
+        keywords.put("var",    VAR);
+        keywords.put("while",  WHILE);
+    }
 
     Scanner(String source) {
         this.source = source;
@@ -76,9 +115,39 @@ class Scanner {
         case '"': string(); break;
 
         default:
-            Veld.error(line, "Unexpected character.");
+            if (isDigit(c)) {
+                number();
+            } else if (isAlpha(c)) {
+                identifier();
+            } else {
+                Veld.error(line, "Unexpected character.");
+            }
             break;
         }
+    }
+
+    private void identifier() {
+        while (isAlphaNumeric(peek())) advance();
+
+        String text = source.substring(start, current);
+        TokenType type = keywords.get(text);
+        if (type == null) type = IDENTIFIER;
+        addToken(type);
+    }
+
+    private void number() {
+        while (isDigit(peek())) advance();
+
+        // Look for a fractional part.
+        if (peek() == '.' && isDigit(peekNext())) {
+            // Consume the "."
+            advance();
+
+            while (isDigit(peek())) advance();
+        }
+
+        addToken(NUMBER,
+            Double.parseDouble(source.substring(start, current)));
     }
 
     private void string() {
@@ -119,6 +188,7 @@ class Scanner {
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));
     }
+
     private boolean match(char expected) {
         if (isAtEnd()) return false;
         if (source.charAt(current) != expected) return false;
@@ -126,8 +196,28 @@ class Scanner {
         current++;
         return true;
     }
+
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
+    }
+
+    private char peekNext() {
+        if (current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
+    }
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            c == '_';
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
     }
 }
