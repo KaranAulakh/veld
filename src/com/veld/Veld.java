@@ -70,10 +70,8 @@ public class Veld {
         report(line, "", message);
     }
 
-    private static void report(final int line, final String where,
-                               String message) {
-        System.err.println(
-            "[line " + line + "] Error" + where + ": " + message);
+    private static void report(final int line, final String where, String message) {
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
         hadError = true;
     }
 }

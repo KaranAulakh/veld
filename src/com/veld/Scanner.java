@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 class Scanner {
+
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
@@ -35,22 +36,22 @@ class Scanner {
 
     static {
         keywords = new HashMap<>();
-        keywords.put("and",    AND);
-        keywords.put("class",  CLASS);
-        keywords.put("else",   ELSE);
-        keywords.put("false",  FALSE);
-        keywords.put("for",    FOR);
-        keywords.put("fun",    FUN);
-        keywords.put("if",     IF);
-        keywords.put("null",   NULL);
-        keywords.put("or",     OR);
-        keywords.put("print",  PRINT);
+        keywords.put("and", AND);
+        keywords.put("class", CLASS);
+        keywords.put("else", ELSE);
+        keywords.put("false", FALSE);
+        keywords.put("for", FOR);
+        keywords.put("fun", FUN);
+        keywords.put("if", IF);
+        keywords.put("null", NULL);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
         keywords.put("return", RETURN);
-        keywords.put("super",  SUPER);
-        keywords.put("this",   THIS);
-        keywords.put("true",   TRUE);
-        keywords.put("var",    VAR);
-        keywords.put("while",  WHILE);
+        keywords.put("super", SUPER);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("var", VAR);
+        keywords.put("while", WHILE);
     }
 
     Scanner(final String source) {
@@ -70,6 +71,7 @@ class Scanner {
         tokens.add(new Token(TokenType.EOF, "", null, line));
         return tokens;
     }
+
     private void scanToken() {
         char c = advance();
         switch (c) {
@@ -122,6 +124,17 @@ class Scanner {
                     advance();
                 }
             }
+            else if (match('*')) {
+                /* Handles these types of comments */
+                while (peek() != '*' && peekNext() != '/' && !isAtEnd()) {
+                    advance();
+                }
+                // Consume the closing '*/'
+                if (!isAtEnd()) {
+                    advance();
+                    advance();
+                }
+            }
             else {
                 addToken(TokenType.SLASH);
             }
@@ -154,23 +167,31 @@ class Scanner {
     }
 
     private void identifier() {
-        while (isAlphaNumeric(peek())) advance();
+        while (isAlphaNumeric(peek())) {
+            advance();
+        }
 
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
-        if (type == null) type = IDENTIFIER;
+        if (type == null) {
+            type = IDENTIFIER;
+        }
         addToken(type);
     }
 
     private void number() {
-        while (isDigit(peek())) advance();
+        while (isDigit(peek())) {
+            advance();
+        }
 
         // Look for a fractional part.
         if (peek() == '.' && isDigit(peekNext())) {
             // Consume the "."
             advance();
 
-            while (isDigit(peek())) advance();
+            while (isDigit(peek())) {
+                advance();
+            }
         }
 
         addToken(NUMBER,
@@ -179,7 +200,9 @@ class Scanner {
 
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n') line++;
+            if (peek() == '\n') {
+                line++;
+            }
             advance();
         }
 
@@ -217,19 +240,27 @@ class Scanner {
     }
 
     private boolean match(final char expected) {
-        if (isAtEnd()) return false;
-        if (source.charAt(current) != expected) return false;
+        if (isAtEnd()) {
+            return false;
+        }
+        if (source.charAt(current) != expected) {
+            return false;
+        }
         current++;
         return true;
     }
 
     private char peek() {
-        if (isAtEnd()) return '\0';
+        if (isAtEnd()) {
+            return '\0';
+        }
         return source.charAt(current);
     }
 
     private char peekNext() {
-        if (current + 1 >= source.length()) return '\0';
+        if (current + 1 >= source.length()) {
+            return '\0';
+        }
         return source.charAt(current + 1);
     }
 
@@ -243,7 +274,7 @@ class Scanner {
         return isAlpha(c) || isDigit(c);
     }
 
-    private boolean isDigit( char c) {
+    private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
     }
 }
