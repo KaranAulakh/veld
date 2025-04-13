@@ -9,43 +9,54 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Veld {
+
     static boolean hadError = false;
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args)
+        throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: veld script");
             System.exit(64);
-        } else if (args.length == 1) {
+        }
+        else if (args.length == 1) {
             runFile(args[0]);
-        } else {
+        }
+        else {
             runPrompt();
         }
     }
 
     // Wrapper around run method to run a file
-    private static void runFile(String path) throws IOException {
+    private static void runFile(final String path)
+        throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
         // Indicate an error in the exit code.
-        if (hadError) System.exit(65);
+        if (hadError) {
+            System.exit(65);
+        }
     }
 
     // Wrapper around the run method to run in terminal
-    private static void runPrompt() throws IOException {
+    private static void runPrompt()
+        throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
-        for (;;) {
+        for (; ; ) {
             System.out.print("> ");
             String line = reader.readLine();
-            if (line == null) break;
+            if (line == null) {
+                break;
+            }
             run(line);
             hadError = false;
         }
     }
 
     // Main entry point into Veld
-    private static void run(String source) {
+    private static void run(final String source) {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
@@ -55,11 +66,11 @@ public class Veld {
         }
     }
 
-    static void error(int line, String message) {
+    static void error(final int line, final String message) {
         report(line, "", message);
     }
 
-    private static void report(int line, String where,
+    private static void report(final int line, final String where,
                                String message) {
         System.err.println(
             "[line " + line + "] Error" + where + ": " + message);
