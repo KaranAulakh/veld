@@ -9,8 +9,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Veld {
-
+    private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args)
         throws IOException {
@@ -35,6 +36,9 @@ public class Veld {
         // Indicate an error in the exit code.
         if (hadError) {
             System.exit(65);
+        }
+        if (hadRuntimeError) {
+            System.exit(70);
         }
     }
 
@@ -64,13 +68,21 @@ public class Veld {
         Expr expression = parser.parse();
 
         // Stop if there was a syntax error.
-        if (hadError) return;
+        if (hadError) {
+            return;
+        }
 
-        System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(expression);
     }
 
     static void error(final int line, final String message) {
         report(line, "", message);
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() +
+            "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
     }
 
     private static void report(final int line, final String where, String message) {
@@ -81,7 +93,8 @@ public class Veld {
     static void error(Token token, String message) {
         if (token.type == TokenType.EOF) {
             report(token.line, " at end", message);
-        } else {
+        }
+        else {
             report(token.line, " at '" + token.lexeme + "'", message);
         }
     }
