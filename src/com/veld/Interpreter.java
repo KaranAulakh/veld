@@ -84,6 +84,9 @@ public class Interpreter
             "Operands must be two numbers or at least one String.");
         case SLASH:
             checkNumberOperands(expr.operator, left, right);
+            if (right.equals(0.0)) {
+                throw new RuntimeError(expr.operator, "Divide by Zero Exception");
+            }
             return (double) left / (double) right;
         case STAR:
             checkNumberOperands(expr.operator, left, right);
