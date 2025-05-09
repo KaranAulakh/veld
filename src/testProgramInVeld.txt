@@ -1,0 +1,3 @@
+var myNumber = 4;
+print myNumber + 1;
+print "My number is: " + myNumber;

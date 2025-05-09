@@ -5,12 +5,15 @@ import java.util.List;
 public class Interpreter
     implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
+    private Environment environment = new Environment();
+
     void interpret(List<Stmt> statements) {
         try {
             for (Stmt statement : statements) {
                 execute(statement);
             }
-        } catch (RuntimeError error) {
+        }
+        catch (RuntimeError error) {
             Veld.runtimeError(error);
         }
     }
@@ -46,6 +49,11 @@ public class Interpreter
 
         // Unreachable.
         return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return environment.get(expr.name);
     }
 
     @Override
@@ -92,7 +100,7 @@ public class Interpreter
                 return stringify(left) + right;
             }
             throw new RuntimeError(expr.operator,
-            "Operands must be two numbers or at least one String.");
+                "Operands must be two numbers or at least one String.");
         case SLASH:
             checkNumberOperands(expr.operator, left, right);
             return (double) left / (double) right;
@@ -117,11 +125,21 @@ public class Interpreter
         System.out.println(stringify(value));
         return null;
     }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+        if (stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
+        }
+
+        environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
     //////////////////////////
     ///   HELPER METHODS   ///
     //////////////////////////
-
-
 
     private boolean isTruthy(Object object) {
         if (object == null) {
@@ -134,26 +152,36 @@ public class Interpreter
     }
 
     private boolean isEqual(Object a, Object b) {
-        if (a == null && b == null) return true;
-        if (a == null) return false;
+        if (a == null && b == null) {
+            return true;
+        }
+        if (a == null) {
+            return false;
+        }
 
         return a.equals(b);
     }
 
     private void checkNumberOperand(Token operator, Object operand) {
-        if (operand instanceof Double) return;
+        if (operand instanceof Double) {
+            return;
+        }
         throw new RuntimeError(operator, "Operand must be a number.");
     }
 
     private void checkNumberOperands(Token operator,
                                      Object left, Object right) {
-        if (left instanceof Double && right instanceof Double) return;
+        if (left instanceof Double && right instanceof Double) {
+            return;
+        }
 
         throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
     private String stringify(Object object) {
-        if (object == null) return "nil";
+        if (object == null) {
+            return "nil";
+        }
 
         if (object instanceof Double) {
             String text = object.toString();

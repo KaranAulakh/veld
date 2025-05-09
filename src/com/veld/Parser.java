@@ -7,7 +7,10 @@ import static com.veld.TokenType.*;
 
 class Parser {
 
-    private static class ParseError extends RuntimeException {}
+    private static class ParseError
+        extends RuntimeException {
+
+    }
 
     private final List<Token> tokens;
     private int current = 0;
@@ -19,7 +22,7 @@ class Parser {
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(declaration());
         }
 
         return statements;
@@ -29,8 +32,36 @@ class Parser {
     ///    HANDLING STATEMENTS   ///
     ////////////////////////////////
 
+    private Stmt declaration() {
+        try {
+            if (match(VAR)) {
+                return varDeclaration();
+            }
+
+            return statement();
+        }
+        catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name.");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
     private Stmt statement() {
-        if (match(PRINT)) return printStatement();
+        if (match(PRINT)) {
+            return printStatement();
+        }
 
         return expressionStatement();
     }
@@ -46,6 +77,10 @@ class Parser {
         consume(SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
     }
+
+    /////////////////////////////////
+    ///    HANDLING EXPRESSIONS   ///
+    /////////////////////////////////
 
     private Expr expression() {
         return equality();
@@ -124,6 +159,10 @@ class Parser {
             return new Expr.Literal(previous().literal);
         }
 
+        if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
+        }
+
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
             consume(RIGHT_PAREN, "Expect ')' after expression.");
@@ -136,6 +175,7 @@ class Parser {
     //////////////////////////
     ///   HELPER METHODS   ///
     //////////////////////////
+
     private boolean match(TokenType... types) {
         for (TokenType type : types) {
             if (check(type)) {
@@ -190,7 +230,9 @@ class Parser {
         advance();
 
         while (!isAtEnd()) {
-            if (previous().type == SEMICOLON) return;
+            if (previous().type == SEMICOLON) {
+                return;
+            }
 
             switch (peek().type) {
             case CLASS:
