@@ -72,7 +72,7 @@ public class Veld {
             return;
         }
 
-        interpreter.interpret(statements);
+        interpreter.interpret((Expr) statements);
     }
 
     static void error(final int line, final String message) {
