@@ -1,29 +1,16 @@
 package com.veld;
 
-import java.util.List;
-
 public class Interpreter
-    implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    implements Expr.Visitor<Object> {
 
-    private Environment environment = new Environment();
-
-    void interpret(List<Stmt> statements) {
+    void interpret(Expr expression) {
         try {
-            for (Stmt statement : statements) {
-                execute(statement);
-            }
+            Object value = evaluate(expression);
+            System.out.println(stringify(value));
         }
         catch (RuntimeError error) {
             Veld.runtimeError(error);
         }
-    }
-
-    private Object evaluate(Expr expr) {
-        return expr.accept(this);
-    }
-
-    private void execute(Stmt stmt) {
-        stmt.accept(this);
     }
 
     ////////////////////
@@ -49,11 +36,6 @@ public class Interpreter
 
         // Unreachable.
         return null;
-    }
-
-    @Override
-    public Object visitVariableExpr(Expr.Variable expr) {
-        return environment.get(expr.name);
     }
 
     @Override
@@ -113,33 +95,13 @@ public class Interpreter
         return null;
     }
 
-    @Override
-    public Void visitExpressionStmt(Stmt.Expression stmt) {
-        evaluate(stmt.expression);
-        return null;
-    }
-
-    @Override
-    public Void visitPrintStmt(Stmt.Print stmt) {
-        Object value = evaluate(stmt.expression);
-        System.out.println(stringify(value));
-        return null;
-    }
-
-    @Override
-    public Void visitVarStmt(Stmt.Var stmt) {
-        Object value = null;
-        if (stmt.initializer != null) {
-            value = evaluate(stmt.initializer);
-        }
-
-        environment.define(stmt.name.lexeme, value);
-        return null;
-    }
-
     //////////////////////////
     ///   HELPER METHODS   ///
     //////////////////////////
+
+    private Object evaluate(Expr expr) {
+        return expr.accept(this);
+    }
 
     private boolean isTruthy(Object object) {
         if (object == null) {
@@ -180,7 +142,7 @@ public class Interpreter
 
     private String stringify(Object object) {
         if (object == null) {
-            return "nil";
+            return "null";
         }
 
         if (object instanceof Double) {
